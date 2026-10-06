@@ -21,22 +21,19 @@ Run all `change` commands from the **root of the LIFE Wallet app repo**.
 
 ## Installation (once per machine)
 
-Requires `git` and `sudo` (macOS/Linux).
-
-1. In `tools/install.sh`, replace `<your-org>` with your GitHub organization or username.
-2. Run:
+Requires `git` and `sudo` (macOS/Linux). You need access to the GitHub repo (sign in with GitHub, or use SSH, if it is private).
 
 ```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/<your-org>/lifewallet-mobile-change-log/master/tools/install.sh)"
+git clone https://github.com/arensonzenza/lifewallet-mobile-change-log.git ~/.change
+sudo chmod +x ~/.change/changelog.sh
+sudo ln -s ~/.change/changelog.sh /usr/local/bin/change
 ```
 
-This clones the tool into `~/.change` and creates the `change` command in `/usr/local/bin`.
+This installs the tool into `~/.change` and creates the `change` command in `/usr/local/bin`. Check it works by running `change`.
 
-- Use `main` instead of `master` in the URL if that is your default branch.
-- To install somewhere else, set `CHANGE` first: `export CHANGE=~/tools/change`.
-- "Already installed"? Delete `~/.change` and run it again.
-- Check it works by running `change`.
-- Update the tool later with `change upgrade`.
+- "Already exists"? Delete the old copy first: `rm -rf ~/.change`, then run the three commands again.
+- `ln: /usr/local/bin/change: File exists`? The command is already linked. Check where it points with `ls -l /usr/local/bin/change`; it should point to `~/.change/changelog.sh`. Use `sudo ln -sf` to replace it.
+- Update the tool later with `change upgrade`. It pulls from the repo that `~/.change` was cloned from, so keep the clone URL above.
 
 ## Usage
 
