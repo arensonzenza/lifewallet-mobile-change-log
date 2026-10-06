@@ -66,10 +66,10 @@ change new <type> <message>
 Examples:
 
 ```bash
-change new added [LW-210] Add QR code scan for Send Money
-change new changed [LW-198] Update Cash In confirmation screen
-change new fixed [LW-231] Fix wallet balance not refreshing after transfer
-change new security Upgrade encryption library
+change new added "[LW-210] Add QR code scan for Send Money"
+change new changed "[LW-198] Update Cash In confirmation screen"
+change new fixed "[LW-231] Fix wallet balance not refreshing after transfer"
+change new security "Upgrade encryption library"
 ```
 
 Rules:
