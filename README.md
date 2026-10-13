@@ -104,7 +104,7 @@ Output:
 The heading shows the app version with build number and a date:
 
 - `change preview` (unreleased) reads `version:` from `pubspec.yaml` in the current folder and uses **today's date**, and the output starts with `## Unreleased`, followed by `## [1.90.0+95] 2026-10-13`. Without a `pubspec.yaml` only `## Unreleased` is shown.
-- `change preview <version>` (released) starts with `## Release <version>` (the version you released, without the build number), followed by `## [<version+build>] <date>` with the **date it was released**. The release date is saved by `change release` in a hidden `.released` file inside the version folder, so commit it.
+- `change preview <version>` (released) starts with `## Release <version>` (the version you released, without the build number), followed by `## [<app version+build>] <date>`. The app version (from `pubspec.yaml`) and the **date it was released** are saved by `change release`. They are saved in hidden `.released` and `.version` files inside the version folder, so commit them.
 - Each version+build has its own preview, for example `change preview 1.90.0+93` and `change preview 1.90.0+92`.
 
 ### 4. Release (when you submit to the store)

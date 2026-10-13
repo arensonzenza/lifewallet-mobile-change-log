@@ -20,6 +20,11 @@ function _changelogsh_release {
 
   mv 'changelog/unreleased' "changelog/$expanded"
   date +"%Y-%m-%d" > "changelog/$expanded/.released"
+  # Version history: the app version (pubspec.yaml) at the time of release
+  app_version=$(_changelogsh_pubspec_version)
+  if [ -n "$app_version" ]; then
+    echo "$app_version" > "changelog/$expanded/.version"
+  fi
 
   _changelogsh_preview $version
 }

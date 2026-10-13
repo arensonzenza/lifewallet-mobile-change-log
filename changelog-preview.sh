@@ -18,7 +18,7 @@ function _changelogsh_preview {
   fi
 
   # Unreleased: "## Unreleased", then "## [<version+build>] <date>" (version from pubspec.yaml, today's date).
-  # Released:   "## Release <version>", then "## [<version+build>] <date>" (date saved by `change release`).
+  # Released:   "## Release <version>", then "## [<app version+build>] <date>" (both saved by `change release`).
   echo "# What's new?"
   echo ""
   if [ "$raw_version" == "Unreleased" ]; then
@@ -29,7 +29,9 @@ function _changelogsh_preview {
   else
     echo "## Release ${raw_version%%+*}"
     echo ""
-    heading_version=$raw_version
+    # app version saved by `change release`; older releases fall back to the released version
+    heading_version=$(cat "changelog/$expanded/.version" 2>/dev/null)
+    [ -z "$heading_version" ] && heading_version=$raw_version
     heading_date=$(cat "changelog/$expanded/.released" 2>/dev/null)
   fi
   if [ -n "$heading_version" ]; then

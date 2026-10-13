@@ -123,7 +123,7 @@ change preview 1.90.0+93
 ...
 ```
 
-`## Release 1.90.0` is the version you released, without the build number. The date is the day `change release` was run, saved in the hidden `.released` file inside the version folder. Commit that file.
+`## Release 1.90.0` is the version you released, without the build number. The second heading is the app version from `pubspec.yaml` at the time of release, and the date is the day `change release` was run, saved in the hidden `.released` file inside the version folder, with the app version in `.version`. Commit both files.
 
 ## 8. Undo a release
 
