@@ -52,6 +52,8 @@ change preview
 ```
 # What's new?
 
+## Unreleased
+
 ## [1.90.0+93] 2026-10-06
 ### Added
 - [GH-1900] Add dark mode
@@ -66,7 +68,7 @@ change preview
 - Upgrade encryption library
 ```
 
-The version comes from `pubspec.yaml` and the date is today. Without a `pubspec.yaml`, the heading shows `## [Unreleased] <date>`.
+The version comes from `pubspec.yaml` and the date is today. Pending changes start with `## Unreleased`, followed by `## [<version+build>] <date>`. Without a `pubspec.yaml`, only `## Unreleased` is shown.
 
 ## 5. Release (when you submit to the store)
 
@@ -113,13 +115,15 @@ change preview 1.90.0+93
 ```
 # What's new?
 
+## Release 1.90.0
+
 ## [1.90.0+93] 2026-10-06
 ### Added
 - [GH-1900] Add dark mode
 ...
 ```
 
-The date is the day `change release` was run, saved in the hidden `.released` file inside the version folder. Commit that file.
+`## Release 1.90.0` is the version you released, without the build number. The date is the day `change release` was run, saved in the hidden `.released` file inside the version folder. Commit that file.
 
 ## 8. Undo a release
 

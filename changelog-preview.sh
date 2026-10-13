@@ -17,27 +17,28 @@ function _changelogsh_preview {
     return
   fi
 
-  # Heading: "## [<version+build>] <date>"
-  # Unreleased: version from pubspec.yaml and today's date.
-  # Released: the released version and the date saved by `change release`.
+  # Unreleased: "## Unreleased", then "## [<version+build>] <date>" (version from pubspec.yaml, today's date).
+  # Released:   "## Release <version>", then "## [<version+build>] <date>" (date saved by `change release`).
+  echo "# What's new?"
+  echo ""
   if [ "$raw_version" == "Unreleased" ]; then
+    echo "## Unreleased"
+    echo ""
     heading_version=$(_changelogsh_pubspec_version)
     heading_date=$(date +"%Y-%m-%d")
-    if [ -z "$heading_version" ]; then
-      heading_version="Unreleased"
-    fi
   else
+    echo "## Release ${raw_version%%+*}"
+    echo ""
     heading_version=$raw_version
     heading_date=$(cat "changelog/$expanded/.released" 2>/dev/null)
   fi
-  heading="## [$heading_version]"
-  if [ -n "$heading_date" ]; then
-    heading="$heading $heading_date"
+  if [ -n "$heading_version" ]; then
+    heading="## [$heading_version]"
+    if [ -n "$heading_date" ]; then
+      heading="$heading $heading_date"
+    fi
+    echo "$heading"
   fi
-
-  echo "# What's new?"
-  echo ""
-  echo "$heading"
   for dir in changelog/$expanded/*; do
     if [ "$(ls -A $dir)" ]; then
       current=$(echo $dir | grep -o '[^/]*$')
