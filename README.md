@@ -155,7 +155,7 @@ lifewallet-mobile-app/
 ├── pubspec.yaml                  # version: 1.5.0+15
 └── changelog/
     ├── 001004000/                # released 1.4.0
-    │   ├── .released             # release date
+    │   ├── .release              # name, release date, app version
     │   └── 001004000012/         # build 12
     │       ├── added/
     │       │   └── 20260915101200    # "Add biometric login"

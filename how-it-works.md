@@ -159,7 +159,7 @@ change preview 1.90.0+93
 - [GH-1900] Add dark mode
 ```
 
-`change preview 1.90.0` shows `## Release 1.90.0` and every build released under it, each in its own section. `change preview 1.90.0+93` shows only that build. The release date is saved in the hidden `.released` file in the version folder. Commit it.
+`change preview 1.90.0` shows `## Release 1.90.0` and every build released under it, each in its own section. `change preview 1.90.0+93` shows only that build. The release name, release date and app version are saved together in the hidden `.release` file in the version folder (`name=7.0`, `released=2026-10-14`, `version=1.90.0+103`). Commit it.
 
 ## 8. Undo a release
 
@@ -186,7 +186,7 @@ git -C ~/.change remote -v
 ```
 changelog/
 ├── 001090000/                # released 1.90.0
-│   ├── .released             # release date
+│   ├── .release              # name, release date, app version
 │   ├── 001090000093/         # build 93
 │   │   ├── added/
 │   │   └── fixed/

@@ -18,7 +18,7 @@ function _changelogsh_release_summary {
     return
   fi
 
-  name=$(cat "changelog/$base/.name" 2>/dev/null)
+  name=$(_changelogsh_release_field "changelog/$base" name)
   [ -z "$name" ] && name=${version%%+*}
 
   types=$(for d in changelog/$base/*/* changelog/$base/*; do
@@ -95,15 +95,14 @@ function _changelogsh_release {
     return
   fi
 
-  date +"%Y-%m-%d" > "changelog/$base/.released"
-  # Remember the release name as typed (7.0 stays 7.0, not 7.0.0)
-  name="${1%%+*}"
-  echo "$name" > "changelog/$base/.name"
-  # Version history: the app version (pubspec.yaml) at the time of release
-  app_version=$(_changelogsh_pubspec_version)
-  if [ -n "$app_version" ]; then
-    echo "$app_version" > "changelog/$base/.version"
-  fi
+  # One hidden file with the release details: the name as typed (7.0 stays 7.0, not 7.0.0),
+  # the release date, and the app version (pubspec.yaml) at the time of release
+  {
+    echo "name=${1%%+*}"
+    echo "released=$(date +"%Y-%m-%d")"
+    echo "version=$(_changelogsh_pubspec_version)"
+  } > "changelog/$base/.release"
+  rm -f "changelog/$base/.name" "changelog/$base/.released" "changelog/$base/.version"
 
   _changelogsh_preview $version
 }

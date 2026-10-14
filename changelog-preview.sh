@@ -51,16 +51,16 @@ function _changelogsh_preview {
   if [ -d "changelog/$base" ] && { [ -z "$only" ] || [ -d "changelog/$base/$only" ] || _changelogsh_has_flat_entries "changelog/$base"; }; then
     echo "# What's new?"
     echo ""
-    release_name=$(cat "changelog/$base/.name" 2>/dev/null)
+    release_name=$(_changelogsh_release_field "changelog/$base" name)
     [ -z "$release_name" ] && release_name=${raw_version%%+*}
     echo "## Release $release_name"
     echo ""
     _changelogsh_preview_builds "changelog/$base" $only
     if [ -z "$only" ] && _changelogsh_has_flat_entries "changelog/$base"; then
       # released without version+build sections (older releases): use the app version saved at release
-      label=$(cat "changelog/$base/.version" 2>/dev/null)
+      label=$(_changelogsh_release_field "changelog/$base" version)
       [ -z "$label" ] && label=$raw_version
-      _changelogsh_print_section "changelog/$base" "$label" "$(cat changelog/$base/.released 2>/dev/null)"
+      _changelogsh_print_section "changelog/$base" "$label" "$(_changelogsh_release_field "changelog/$base" released)"
     fi
   elif [ -n "$only" ] && [ -d "changelog/unreleased/$only" ]; then
     echo "# What's new?"

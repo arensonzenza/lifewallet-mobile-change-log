@@ -117,3 +117,24 @@ function _changelogsh_merge_dir {
   done
   rmdir "$src" 2>/dev/null
 }
+
+# Release details live in one hidden file, changelog/<version>/.release:
+#   name=7.0
+#   released=2026-10-14
+#   version=1.90.0+103
+# Usage: _changelogsh_release_field <version folder> <name|released|version>
+# Releases made by older versions of this tool (.name, .released, .version files) are still read.
+function _changelogsh_release_field {
+  local dir="$1" key="$2" value=""
+  if [ -f "$dir/.release" ]; then
+    value=$(grep "^$key=" "$dir/.release" | head -1 | cut -d= -f2-)
+  fi
+  if [ -z "$value" ]; then
+    case "$key" in
+      name) value=$(cat "$dir/.name" 2>/dev/null) ;;
+      released) value=$(cat "$dir/.released" 2>/dev/null) ;;
+      version) value=$(cat "$dir/.version" 2>/dev/null) ;;
+    esac
+  fi
+  echo "$value"
+}
