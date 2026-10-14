@@ -7,45 +7,49 @@ function _changelogsh_release {
   fi
 
   version=$(_changelogsh_normalize_version $1)
-  expanded=$(_changelogsh_raw_to_expanded $version)
+  base=$(_changelogsh_raw_to_expanded ${version%%+*})
+  unreleased='changelog/unreleased'
 
-  # Entries left in changelog/unreleased are assigned to this version
-  if _changelogsh_has_unreleased; then
-    if [ ! -f "changelog/$expanded/.released" ]; then
-      for dir in changelog/unreleased/*; do
-        if [ -d "$dir" ]; then
-          type=$(basename "$dir")
-          mkdir -p "changelog/$expanded/$type"
-          for file in "$dir"/*; do
-            if [ -e "$file" ]; then
-              mv "$file" "changelog/$expanded/$type/"
-            fi
-          done
-        fi
+  # "change release 1.90.0+93" releases that build only.
+  # "change release 1.90.0" releases every unreleased build of 1.90.0, plus entries that have no version+build.
+  moved=""
+  if [[ "$version" == *+* ]]; then
+    b=$(_changelogsh_raw_to_expanded $version)
+    if [ -d "$unreleased/$b" ]; then
+      mkdir -p "changelog/$base/$b"
+      _changelogsh_merge_dir "$unreleased/$b" "changelog/$base/$b"
+      moved="yes"
+    fi
+  else
+    for b in $(_changelogsh_build_folders $unreleased); do
+      if [ "${b:0:9}" == "$base" ]; then
+        mkdir -p "changelog/$base/$b"
+        _changelogsh_merge_dir "$unreleased/$b" "changelog/$base/$b"
+        moved="yes"
+      fi
+    done
+    if _changelogsh_has_flat_entries $unreleased; then
+      mkdir -p "changelog/$base"
+      for dir in $unreleased/[a-z]*; do
+        [ -d "$dir" ] && mkdir -p "changelog/$base/$(basename $dir)" && \
+          for file in "$dir"/*; do [ -e "$file" ] && mv "$file" "changelog/$base/$(basename $dir)/"; done
+        rmdir "$dir" 2>/dev/null
       done
+      moved="yes"
     fi
   fi
 
-  folders=$(_changelogsh_version_folders $version)
-  if [ -z "$folders" ]; then
+  if [ -z "$moved" ]; then
     printf "Nothing to release for $version.\n"
     return
   fi
 
-  # Mark every matching version+build as released, each with its own date.
-  # "change release 1.90.0+93" releases that build; "change release 1.90.0" releases every build of 1.90.0.
-  released=""
-  for folder in $folders; do
-    v=$(_changelogsh_folder_to_version $folder)
-    if [ -f "changelog/$folder/.released" ]; then
-      printf "$v is already released. Run 'change unrelease $v' first.\n"
-    else
-      date +"%Y-%m-%d" > "changelog/$folder/.released"
-      released="yes"
-    fi
-  done
-
-  if [ -n "$released" ]; then
-    _changelogsh_preview $version
+  date +"%Y-%m-%d" > "changelog/$base/.released"
+  # Version history: the app version (pubspec.yaml) at the time of release
+  app_version=$(_changelogsh_pubspec_version)
+  if [ -n "$app_version" ]; then
+    echo "$app_version" > "changelog/$base/.version"
   fi
+
+  _changelogsh_preview $version
 }

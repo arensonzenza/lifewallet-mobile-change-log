@@ -11,7 +11,7 @@ if [ -d "$CHANGE" ]; then
 fi
 
 # TODO: replace arensonzenza with your GitHub organization/user
-git clone https://github.com/arensonzenza/lifewallet-mobile-change-log.git $CHANGE
+git clone https://github.com/<your-org>/lifewallet-mobile-change-log.git $CHANGE
 
 echo ""
 echo "Entering sudo"

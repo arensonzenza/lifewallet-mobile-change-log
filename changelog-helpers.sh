@@ -49,14 +49,9 @@ function _changelogsh_current_version {
   fi
 }
 
-# True when changelog/unreleased holds entry files
-function _changelogsh_has_unreleased {
-  [ -d 'changelog/unreleased' ] && find changelog/unreleased -type f 2>/dev/null | grep -q .
-}
-
 # Folder name -> version: 001090000093 -> 1.90.0+93, 001090000 -> 1.90.0
 function _changelogsh_folder_to_version {
-  f="$1"
+  local f="$1" v
   v="$((10#${f:0:3})).$((10#${f:3:3})).$((10#${f:6:3}))"
   if [ ${#f} -gt 9 ]; then
     v="$v+$((10#${f:9:3}))"
@@ -64,17 +59,61 @@ function _changelogsh_folder_to_version {
   echo "$v"
 }
 
-# Folders (newest first) that belong to a version.
-#   1.90.0+93 -> only that build
-#   1.90.0    -> 1.90.0 itself plus every build of it (1.90.0+93, 1.90.0+94, ...)
-function _changelogsh_version_folders {
-  raw="$1"
-  expanded=$(_changelogsh_raw_to_expanded $raw)
-  if [[ "$raw" == *+* ]]; then
-    [ -d "changelog/$expanded" ] && echo "$expanded"
-  else
-    for d in changelog/${expanded}???  changelog/${expanded}; do
-      [ -d "$d" ] && basename "$d"
-    done | sort -r
+# Date (YYYY-MM-DD) of the newest entry under a folder; entry file names are timestamps
+function _changelogsh_latest_entry_date {
+  local newest
+  newest=$(find "$1" -type f 2>/dev/null | awk -F/ '{print $NF}' | grep -E '^[0-9]{14}$' | sort | tail -1)
+  if [ -n "$newest" ]; then
+    echo "${newest:0:4}-${newest:4:2}-${newest:6:2}"
   fi
+}
+
+# Version folders (digits only) inside a folder, newest first
+function _changelogsh_build_folders {
+  for d in $1/*; do
+    [ -d "$d" ] && basename "$d"
+  done 2>/dev/null | grep -E '^[0-9]+$' | sort -r
+}
+
+# True when a folder directly holds type folders with entries (old style, no version+build in between)
+function _changelogsh_has_flat_entries {
+  for d in $1/[a-z]*; do
+    [ -d "$d" ] && [ "$(ls -A $d)" ] && return 0
+  done
+  return 1
+}
+
+# One "## [version] date" block with its types. Args: folder, version label, date
+function _changelogsh_print_section {
+  local folder="$1" label="$2" date_text="$3" heading dir file
+  heading="## [$label]"
+  if [ -n "$date_text" ]; then
+    heading="$heading $date_text"
+  fi
+  echo "$heading"
+  for dir in $folder/[a-z]*; do
+    if [ -d "$dir" ] && [ "$(ls -A $dir)" ]; then
+      echo "###" $(_changelogsh_title $(basename $dir))
+      # files are ordered oldest to newest; for duplicate lines only the latest is kept
+      for file in $dir/*; do
+        echo "-" $(cat $file)
+      done | awk '{ line[NR] = $0; last[$0] = NR } END { for (i = 1; i <= NR; i++) if (last[line[i]] == i) print line[i] }'
+      echo ""
+    fi
+  done
+}
+
+# Moves everything in folder $1 into folder $2 (merging type folders, never overwriting)
+function _changelogsh_merge_dir {
+  local src="$1" dst="$2" dir file
+  for dir in $src/*; do
+    if [ -d "$dir" ]; then
+      mkdir -p "$dst/$(basename $dir)"
+      for file in "$dir"/*; do
+        [ -e "$file" ] && mv "$file" "$dst/$(basename $dir)/"
+      done
+      rmdir "$dir" 2>/dev/null
+    fi
+  done
+  rmdir "$src" 2>/dev/null
 }

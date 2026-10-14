@@ -20,8 +20,8 @@ These are the available commands:
   init        Initialize changelog in current directory
   new         Register new change in the changelog
   preview     Preview the changelog in Markdown format
-  release     Mark a version as released (saves the release date)
-  unrelease   Removes the released mark from a version
+  release     Release the changes for the current version
+  unrelease   Reverts the changes from the version specified back to unreleased
   upgrade     Pulls the latest master branch from GitHub\n"
 
   if [ "$#" -eq 0 ]; then

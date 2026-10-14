@@ -1,10 +1,6 @@
-# LIFE Wallet Change Log: How It Works
+# LIFE Wallet Change Log: Sample Usage
 
-A walkthrough of every `change` command, using a sample project. Run all commands from the root of the LIFE Wallet app repo.
-
-## The idea
-
-Every change is its own small file, and it is filed under the **version+build in `pubspec.yaml` at the moment you add it**. So each version+build has its own changes, and builds never share entries.
+A walkthrough of every `change` command, using a sample project whose `pubspec.yaml` has `version: 1.90.0+93`. Run all commands from the root of the LIFE Wallet app repo.
 
 ## 1. List the commands
 
@@ -20,12 +16,20 @@ These are the available commands:
   init        Initialize changelog in current directory
   new         Register new change in the changelog
   preview     Preview the changelog in Markdown format
-  release     Mark a version as released (saves the release date)
-  unrelease   Removes the released mark from a version
+  release     Release the changes for the current version
+  unrelease   Reverts the changes from the version specified back to unreleased
   upgrade     Pulls the latest master branch from GitHub
 ```
 
-## 2. Add changes (pubspec.yaml has `version: 1.90.0+93`)
+## 2. Initialize (once per app repo)
+
+```bash
+change init
+```
+
+Creates `changelog/unreleased/` with `added`, `changed`, `deprecated`, `fixed`, `removed` and `security` folders. Commit it.
+
+## 3. Add changes
 
 ```bash
 change new added [GH-1900] Add dark mode
@@ -35,12 +39,11 @@ change new security Upgrade encryption library
 ```
 
 - Valid types: `added`, `changed`, `deprecated`, `fixed`, `removed`, `security`. The default is `fixed`.
-- Each call creates one file in `changelog/001090000093/<type>/`. Commit it with your code change.
+- Each call creates one small file in `changelog/unreleased/<version+build>/<type>/`, using the version+build in `pubspec.yaml` at that moment. It is always unreleased. Commit it with your code change.
 - Avoid shell special characters such as `*` and `&` in messages.
 - If the same message is added twice in the same type, the preview shows it once and keeps the latest.
-- `change init` is optional. It only creates the `changelog/unreleased` folders.
 
-## 3. Preview the current build
+## 4. Preview pending changes
 
 ```bash
 change preview
@@ -48,6 +51,8 @@ change preview
 
 ```
 # What's new?
+
+## Unreleased
 
 ## [1.90.0+93] 2026-10-06
 ### Added
@@ -63,9 +68,9 @@ change preview
 - Upgrade encryption library
 ```
 
-The version comes from `pubspec.yaml`. The date is today until the version is released, then the release date.
+Pending changes start with `## Unreleased`. Then every version+build that has pending entries gets its own section, newest build first (see step 6). The date is the date of the newest entry in that build.
 
-## 4. Release (when you submit this build to the store)
+## 5. Release (when you submit to the store)
 
 ```bash
 change release 1.90.0+93
@@ -74,14 +79,16 @@ git commit -m "chore: release 1.90.0+93 changelog"
 git tag v1.90.0+93
 ```
 
-- This marks the version as released and saves the date in a hidden `.released` file. Commit it.
-- Entries do not move. They are already in the version's folder.
+- `change release 1.90.0` releases every pending build of 1.90.0 (for example +93 and +94) into `changelog/001090000/`. Each build keeps its own section.
+- `change release 1.90.0+93` releases only that build.
+- Entries added without a version+build (older style) go along with `change release 1.90.0`.
+- Bumping the build number in `pubspec.yaml` does not release anything. Entries stay unreleased until you release.
 - Short versions are padded: `7` and `7.0` become `7.0.0`.
-- Releasing a version twice is refused: `1.90.0+93 is already released. Run 'change unrelease 1.90.0+93' first.`
+- `Nothing to release for X.` is printed when no pending entry matches.
 
-## 5. Next build: new entries go to the new build
+## 6. Next build: new pending entries
 
-Bump `pubspec.yaml` to `1.90.0+94`, then:
+After bumping `pubspec.yaml` to `1.90.0+94`:
 
 ```bash
 change new fixed [GH-1901] Fix crash when opening notifications
@@ -91,14 +98,20 @@ change preview
 ```
 # What's new?
 
-## [1.90.0+94] 2026-10-06
+## Unreleased
+
+## [1.90.0+94] 2026-10-07
 ### Fixed
 - [GH-1901] Fix crash when opening notifications
+
+## [1.90.0+93] 2026-10-06
+### Added
+- [GH-1900] Add dark mode
 ```
 
-No `change release` or `change init` is needed in between. Before you add the first entry for a new build, `change preview` says `No changes for 1.90.0+94 yet.`
+Each version+build is its own section under `## Unreleased`, so entries of +93 and +94 never mix.
 
-## 6. Preview any other build
+## 7. Preview an earlier release
 
 ```bash
 change preview 1.90.0+93
@@ -107,35 +120,28 @@ change preview 1.90.0+93
 ```
 # What's new?
 
+## Release 1.90.0
+
+## [1.90.0+94] 2026-10-07
+### Fixed
+- [GH-1901] Fix crash when opening notifications
+
 ## [1.90.0+93] 2026-10-06
 ### Added
 - [GH-1900] Add dark mode
-...
 ```
 
-Each version+build has its own preview. The date is the release date saved by `change release`. A build that was never released shows no date.
+`change preview 1.90.0` shows `## Release 1.90.0` and every build released under it, each in its own section. `change preview 1.90.0+93` shows only that build. The release date is saved in the hidden `.released` file in the version folder. Commit it.
 
-## 6b. Preview or release every build of a version
-
-Give a version without a build number and each build gets its own section, newest first:
-
-```bash
-change preview 1.90.0     # shows 1.90.0+95, 1.90.0+94, 1.90.0+93 separately
-change release 1.90.0     # releases every build of 1.90.0, each marked with its own date
-change unrelease 1.90.0   # removes the released mark from every build of 1.90.0
-```
-
-Give the build number (`change release 1.90.0+94`) to touch only that build. Builds that are already released are skipped with a message.
-
-## 7. Undo a release
+## 8. Undo a release
 
 ```bash
 change unrelease 1.90.0+93
 ```
 
-Removes the released mark and date. The entries stay where they are.
+Moves that build back into `changelog/unreleased/`, merging with entries already pending there. `change unrelease 1.90.0` moves every build of 1.90.0. Nothing is overwritten or dropped.
 
-## 8. Upgrade the tool
+## 9. Upgrade the tool
 
 ```bash
 change upgrade
@@ -151,21 +157,20 @@ git -C ~/.change remote -v
 
 ```
 changelog/
-├── 001090000093/         # 1.90.0+93
-│   ├── .released         # release date (after `change release`)
-│   ├── added/
-│   ├── changed/
-│   ├── fixed/
-│   └── security/
-└── 001090000094/         # 1.90.0+94 (current build)
-    └── fixed/
+├── 001090000/                # released 1.90.0
+│   ├── .released             # release date
+│   ├── 001090000093/         # build 93
+│   │   ├── added/
+│   │   └── fixed/
+│   └── 001090000094/         # build 94
+│       └── fixed/
+└── unreleased/               # not released yet
+    └── 001090000095/         # build 95 (current)
+        ├── added/
+        └── security/
 ```
 
-Versions are stored zero-padded, so `1.90.0+93` becomes `001090000093`.
-
-## Older entries in `changelog/unreleased`
-
-Entries added without a `pubspec.yaml`, or with an older version of this tool, sit in `changelog/unreleased`. `change preview` points them out. Run `change release <version>` to move them into a version.
+Versions are stored zero-padded, so `1.90.0+93` becomes `001090000093` and `1.90.0` becomes `001090000`.
 
 ## What not to do
 

@@ -8,21 +8,21 @@ function _changelogsh_new {
     type=$1
   fi
 
-  # Entries are filed under the version+build in pubspec.yaml at the time they are added.
-  # Without a pubspec.yaml they go to changelog/unreleased.
-  target='unreleased'
+  # New entries are always unreleased. They are kept per version+build (from pubspec.yaml):
+  # changelog/unreleased/<version+build>/<type>/. Without a pubspec.yaml: changelog/unreleased/<type>/.
+  target='changelog/unreleased'
   current=$(_changelogsh_current_version)
   if [ -n "$current" ]; then
-    target=$(_changelogsh_raw_to_expanded $current)
+    target="$target/$(_changelogsh_raw_to_expanded $current)"
   fi
 
-  mkdir -p "changelog/$target/$type"
+  mkdir -p "$target/$type"
 
   if [ "$#" -ge 2 ]; then
     # never overwrite an entry created in the same second
-    while [ -e "changelog/$target/$type/$timestamp" ]; do
+    while [ -e "$target/$type/$timestamp" ]; do
       timestamp=$((timestamp + 1))
     done
-    echo ${@:2} > "changelog/$target/$type/$timestamp"
+    echo ${@:2} > "$target/$type/$timestamp"
   fi
 }
