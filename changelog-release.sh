@@ -11,7 +11,8 @@ function _changelogsh_release {
   unreleased='changelog/unreleased'
 
   # "change release 1.90.0+93" releases that build only.
-  # "change release 1.90.0" releases every unreleased build of 1.90.0, plus entries that have no version+build.
+  # "change release 7.0" releases everything that is unreleased under the release name 7.0.0;
+  # every build keeps its own section, so builds are never mixed.
   moved=""
   if [[ "$version" == *+* ]]; then
     b=$(_changelogsh_raw_to_expanded $version)
@@ -22,11 +23,9 @@ function _changelogsh_release {
     fi
   else
     for b in $(_changelogsh_build_folders $unreleased); do
-      if [ "${b:0:9}" == "$base" ]; then
-        mkdir -p "changelog/$base/$b"
-        _changelogsh_merge_dir "$unreleased/$b" "changelog/$base/$b"
-        moved="yes"
-      fi
+      mkdir -p "changelog/$base/$b"
+      _changelogsh_merge_dir "$unreleased/$b" "changelog/$base/$b"
+      moved="yes"
     done
     if _changelogsh_has_flat_entries $unreleased; then
       mkdir -p "changelog/$base"

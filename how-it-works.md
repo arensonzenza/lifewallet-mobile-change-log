@@ -79,12 +79,12 @@ git commit -m "chore: release 1.90.0+93 changelog"
 git tag v1.90.0+93
 ```
 
-- `change release 1.90.0` releases every pending build of 1.90.0 (for example +93 and +94) into `changelog/001090000/`. Each build keeps its own section.
+- `change release 1.90.0` releases **all** pending builds (for example +93 and +94) under the release name 1.90.0, into `changelog/001090000/`. Each build keeps its own section. The release name does not have to match the builds: `change release 7.0` works the same way.
 - `change release 1.90.0+93` releases only that build.
-- Entries added without a version+build (older style) go along with `change release 1.90.0`.
+- Entries added without a version+build (older style) go along too.
 - Bumping the build number in `pubspec.yaml` does not release anything. Entries stay unreleased until you release.
 - Short versions are padded: `7` and `7.0` become `7.0.0`.
-- `Nothing to release for X.` is printed when no pending entry matches.
+- `Nothing to release for X.` is printed only when nothing is unreleased (or, with a build number, when that build has no pending entries).
 
 ## 6. Next build: new pending entries
 

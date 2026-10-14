@@ -124,7 +124,7 @@ git tag v1.4.0+12
 ```
 
 - Bumping the build number in `pubspec.yaml` does **not** release anything. Entries stay in `unreleased` until you run `change release`.
-- `change release 1.4.0` releases every pending build of 1.4.0 (each keeps its own section). `change release 1.4.0+12` releases only that build.
+- `change release 1.4.0` releases **all** pending builds under the release name 1.4.0 (each keeps its own section). `change release 1.4.0+12` releases only that build. The release name doesn't have to match the builds: `change release 7.0` also works.
 - Short versions are padded to three parts: `7` and `7.0` become `7.0.0`, and `7.0+3` becomes `7.0.0+3`. `7.0.0` and `7.0.0+1` stay different versions.
 - Only digits, dots and an optional `+build` are valid. Text such as `version_7.0` or `v7.0` is not.
 - Use `change preview <version>` to get the notes for the store listing or release notes.
