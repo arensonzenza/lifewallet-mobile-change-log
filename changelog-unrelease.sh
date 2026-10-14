@@ -35,7 +35,7 @@ function _changelogsh_unrelease {
 
   # Drop the released marks once nothing is left in the version
   if [ -z "$(_changelogsh_build_folders changelog/$base)" ] && ! _changelogsh_has_flat_entries "changelog/$base"; then
-    rm -f "changelog/$base/.released" "changelog/$base/.version" "changelog/$base/.name"
+    rm -f "changelog/$base/.released" "changelog/$base/.version" "changelog/$base/.name" "changelog/$base/.summary"
     rmdir "changelog/$base" 2>/dev/null
   fi
 

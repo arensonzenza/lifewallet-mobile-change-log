@@ -1,6 +1,58 @@
 #!/bin/bash
 
+# change release summary <version>
+# Wraps every build released under a version into one list per type, with duplicates removed
+# (the latest entry is kept), saves it as changelog/<version>/.summary and prints it.
+function _changelogsh_release_summary {
+  if [ "$#" -lt 1 ]; then
+    echo "Version is required"
+    return
+  fi
+
+  local version base name types type files out
+  version=$(_changelogsh_normalize_version $1)
+  base=$(_changelogsh_raw_to_expanded ${version%%+*})
+
+  if [ ! -d "changelog/$base" ]; then
+    printf "${version%%+*} not found. Run 'change release $1' first.\n"
+    return
+  fi
+
+  name=$(cat "changelog/$base/.name" 2>/dev/null)
+  [ -z "$name" ] && name=${version%%+*}
+
+  types=$(for d in changelog/$base/*/* changelog/$base/*; do
+    [ -d "$d" ] && basename "$d"
+  done | grep -v '^[0-9]' | sort -u)
+
+  out="# What's new?
+"
+  out="$out
+## Release $name
+"
+  for type in $types; do
+    # entries of all builds, oldest to newest (file names are timestamps); for duplicates the latest is kept
+    files=$(for f in changelog/$base/*/$type/* changelog/$base/$type/*; do
+      [ -f "$f" ] && echo "${f##*/} $f"
+    done | sort | cut -d' ' -f2-)
+    if [ -n "$files" ]; then
+      out="$out
+### $(_changelogsh_title $type)
+$(for f in $files; do echo "-" $(cat $f); done | awk '{ line[NR] = $0; last[$0] = NR } END { for (i = 1; i <= NR; i++) if (last[line[i]] == i) print line[i] }')
+"
+    fi
+  done
+
+  echo "$out" > "changelog/$base/.summary"
+  echo "$out"
+}
+
 function _changelogsh_release {
+  if [ "$#" -ge 1 ] && [ "$(echo $1 | tr '[:upper:]' '[:lower:]')" == "summary" ]; then
+    _changelogsh_release_summary ${@:2}
+    return
+  fi
+
   if [ "$#" -lt 1 ]; then
     echo "Version is required"
     return

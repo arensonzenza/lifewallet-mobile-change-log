@@ -129,7 +129,15 @@ git tag v1.4.0+12
 - Only digits, dots and an optional `+build` are valid. Text such as `version_7.0` or `v7.0` is not.
 - Use `change preview <version>` to get the notes for the store listing or release notes.
 
-### 5. Undo a release
+### 5. Summary of a release
+
+```bash
+change release summary 7.0
+```
+
+Wraps every build of the release into one list per type, removes duplicates (the latest is kept), saves it as the hidden `.summary` file in the version folder and prints it under `## Release 7.0`. Run it after `change release 7.0`, and commit the file.
+
+### 6. Undo a release
 
 ```bash
 change unrelease 1.4.0+12
@@ -197,6 +205,7 @@ lifewallet-mobile-change-log/
 | `change init` | Initialize changelog in the current directory |
 | `change new <type> <message>` | Register a new change |
 | `change preview [version]` | Preview the changelog in Markdown (unreleased if no version) |
+| `change release summary <version>` | Wrap a release into one deduplicated list and save it as `.summary` |
 | `change release <version>` | Release all unreleased changes as a version |
 | `change unrelease <version>` | Revert a released version back to unreleased |
 | `change upgrade` | Update the tool to the latest version |

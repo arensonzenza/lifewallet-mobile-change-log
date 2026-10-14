@@ -86,6 +86,34 @@ git tag v1.90.0+93
 - Short versions are padded: `7` and `7.0` become `7.0.0`.
 - `Nothing to release for X.` is printed only when nothing is unreleased (or, with a build number, when that build has no pending entries).
 
+## Summary of a release
+
+```bash
+change release summary 7.0
+```
+
+Wraps every build released under 7.0 into one list per type, removes duplicates across builds (the latest is kept), saves it as the hidden `changelog/007000000/.summary` file and prints it:
+
+```
+# What's new?
+
+## Release 7.0
+
+### Added
+- [LW-1] Add QR scan
+- [LW-5] Dark mode
+
+### Fixed
+- [LW-2] Fix balance
+
+### Security
+- Upgrade encryption
+```
+
+- Run it after `change release 7.0`. It prints `7.0.0 not found. Run 'change release 7.0' first.` if the version isn't released.
+- Run it again any time to refresh `.summary`. Commit the file.
+- Use it for the store listing: it has no build sections and no repeated lines.
+
 ## 6. Next build: new pending entries
 
 After bumping `pubspec.yaml` to `1.90.0+94`:
