@@ -40,3 +40,41 @@ function _changelogsh_normalize_version {
   done
   (IFS='.'; echo "${parts[*]}$build")
 }
+
+# Current app version from pubspec.yaml, normalized (e.g. 1.90.0+93). Empty if missing or invalid.
+function _changelogsh_current_version {
+  v=$(_changelogsh_pubspec_version)
+  if [[ "$v" =~ ^[0-9]+(\.[0-9]+)*(\+[0-9]+)?$ ]]; then
+    _changelogsh_normalize_version "$v"
+  fi
+}
+
+# True when changelog/unreleased holds entry files
+function _changelogsh_has_unreleased {
+  [ -d 'changelog/unreleased' ] && find changelog/unreleased -type f 2>/dev/null | grep -q .
+}
+
+# Folder name -> version: 001090000093 -> 1.90.0+93, 001090000 -> 1.90.0
+function _changelogsh_folder_to_version {
+  f="$1"
+  v="$((10#${f:0:3})).$((10#${f:3:3})).$((10#${f:6:3}))"
+  if [ ${#f} -gt 9 ]; then
+    v="$v+$((10#${f:9:3}))"
+  fi
+  echo "$v"
+}
+
+# Folders (newest first) that belong to a version.
+#   1.90.0+93 -> only that build
+#   1.90.0    -> 1.90.0 itself plus every build of it (1.90.0+93, 1.90.0+94, ...)
+function _changelogsh_version_folders {
+  raw="$1"
+  expanded=$(_changelogsh_raw_to_expanded $raw)
+  if [[ "$raw" == *+* ]]; then
+    [ -d "changelog/$expanded" ] && echo "$expanded"
+  else
+    for d in changelog/${expanded}???  changelog/${expanded}; do
+      [ -d "$d" ] && basename "$d"
+    done | sort -r
+  fi
+}

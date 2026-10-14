@@ -39,14 +39,13 @@ This installs the tool into `~/.change` and creates the `change` command in `/us
 
 A full walkthrough with sample output is in [how-it-works.md](how-it-works.md).
 
-### 1. Initialize (once per app repo)
+### 1. Initialize (once per app repo, optional)
 
 ```bash
 change init
-git add changelog && git commit -m "chore: init changelog"
 ```
 
-Creates `changelog/unreleased/` with `added`, `changed`, `deprecated`, `fixed`, `removed` and `security` folders.
+Creates `changelog/unreleased/` with `added`, `changed`, `deprecated`, `fixed`, `removed` and `security` folders. You don't need it when your app has a `pubspec.yaml`, because entries are filed under the pubspec version automatically.
 
 ### 2. Add a change (every task)
 
@@ -66,22 +65,24 @@ change new <type> <message>
 Examples:
 
 ```bash
-change new added "[LW-210] Add QR code scan for Send Money"
-change new changed "[LW-198] Update Cash In confirmation screen"
-change new fixed "[LW-231] Fix wallet balance not refreshing after transfer"
-change new security "Upgrade encryption library"
+change new added [LW-210] Add QR code scan for Send Money
+change new changed [LW-198] Update Cash In confirmation screen
+change new fixed [LW-231] Fix wallet balance not refreshing after transfer
+change new security Upgrade encryption library
 ```
 
 Rules:
+- The entry is filed under the **version+build in `pubspec.yaml` at the moment you add it**. Bump the pubspec to the next build, and new entries go to the new build automatically. Builds never share entries.
 - Write a short, user-facing sentence and put the ticket ID first, like `[LW-210]`.
 - Avoid shell special characters such as `*` and `&` in the message.
 - Commit the generated file together with your code change.
+- Without a `pubspec.yaml`, entries go to `changelog/unreleased`.
 
 ### 3. Preview
 
 ```bash
-change preview               # pending (unreleased) changes
-change preview 1.4.0+12      # a released version
+change preview                 # the version+build in pubspec.yaml
+change preview 1.90.0+93       # any other version+build
 ```
 
 Output:
@@ -89,54 +90,38 @@ Output:
 ```
 # What's new?
 
-## Unreleased
-
-## [1.90.0+95] 2026-10-13
-### Added
-- [LW-210] Add QR code scan for Send Money
-
+## [1.90.0+94] 2026-10-06
 ### Fixed
-- [LW-231] Fix wallet balance not refreshing after transfer
+- [GH-1901] Fix crash when opening notifications
 ```
 
-#### Version and date in the heading
-
-The heading shows the app version with build number and a date:
-
-- `change preview` (unreleased) reads `version:` from `pubspec.yaml` in the current folder and uses **today's date**, and the output starts with `## Unreleased`, followed by `## [1.90.0+95] 2026-10-13`. Without a `pubspec.yaml` only `## Unreleased` is shown.
-- `change preview <version>` (released) starts with `## Release <version>` (the version you released, without the build number), followed by `## [<app version+build>] <date>`. The app version (from `pubspec.yaml`) and the **date it was released** are saved by `change release`. They are saved in hidden `.released` and `.version` files inside the version folder, so commit them.
-- Each version+build has its own preview, for example `change preview 1.90.0+93` and `change preview 1.90.0+92`.
+- Each version+build has its own preview. Entries from other builds are never mixed in.
+- With no version, the preview uses the version from `pubspec.yaml`. If that build has no entries yet, it says `No changes for 1.90.0+94 yet.`
+- The date is the release date if the version was released, otherwise today for the version you are working on.
+- Short versions are padded: `change preview 2` shows `2.0.0`.
 
 ### 4. Release (when you submit to the store)
 
-Use the exact version from `pubspec.yaml`, including the build number:
-
-```yaml
-# pubspec.yaml
-version: 1.4.0+12
-```
-
 ```bash
-change release 1.4.0+12
-change init                              # recreate the empty unreleased folders
+change release 1.90.0+93
 git add changelog
-git commit -m "chore: release 1.4.0+12 changelog"
-git tag v1.4.0+12
+git commit -m "chore: release 1.90.0+93 changelog"
+git tag v1.90.0+93
 ```
 
-- Bumping the build number in `pubspec.yaml` does **not** change the changelog. Entries stay in `unreleased` until you run `change release`.
-- Run `change release` only when you submit. It moves **all** unreleased entries into that version.
-- Short versions are padded to three parts: `7` and `7.0` become `7.0.0`, and `7.0+3` becomes `7.0.0+3`. `7.0.0` and `7.0.0+1` stay different versions.
-- Only digits, dots and an optional `+build` are valid. Text such as `version_7.0` or `v7.0` is not.
-- Use `change preview <version>` to get the notes for the store listing or release notes.
+- This marks the version as released and saves the release date in a hidden `.released` file. Commit it.
+- Entries do **not** move. They are already in the version's folder because they were filed there when added.
+- If `changelog/unreleased` still holds entries (for example added before the pubspec was set up), `change release` moves them into that version.
+- Releasing a version twice is refused until you run `change unrelease`.
+- Use the full pubspec version. `7` and `7.0` are padded to `7.0.0`. Text such as `version_7.0` or `v7.0` is not valid.
 
 ### 5. Undo a release
 
 ```bash
-change unrelease 1.4.0+12
+change unrelease 1.90.0+93
 ```
 
-Moves the entries back to `unreleased`.
+Removes the released mark and date. The entries stay where they are.
 
 ## Folder structure
 
@@ -145,65 +130,40 @@ In the LIFE Wallet app repo:
 ```
 lifewallet-mobile-app/
 ├── lib/
-├── pubspec.yaml                  # version: 1.5.0+15
+├── pubspec.yaml                  # version: 1.90.0+94
 └── changelog/
-    ├── 001004000012/             # released 1.4.0+12
+    ├── 001090000093/             # 1.90.0+93 (released)
+    │   ├── .released             # release date
     │   ├── added/
-    │   │   └── 20260915101200    # "Add biometric login"
+    │   │   └── 20261006101500    # "[GH-1900] Add dark mode"
     │   └── fixed/
-    │       └── 20260918161530    # "[LW-231] Fix wallet balance not refreshing"
-    ├── 001005000014/             # released 1.5.0+14
-    │   └── added/
-    │       └── 20260928113045    # "[LW-250] Add transaction history filter"
-    └── unreleased/               # pending, next submission
-        ├── added/
-        │   └── 20261005121500    # "[LW-270] Add dark mode"
-        ├── changed/
-        ├── deprecated/
-        ├── fixed/
-        ├── removed/
-        └── security/
+    │       └── 20261006101930    # "[GH-1869] Prevent completed onboarding from reappearing"
+    └── 001090000094/             # 1.90.0+94 (current build, not released yet)
+        └── fixed/
+            └── 20261006123905    # "[GH-1901] Fix crash when opening notifications"
 ```
 
 - Each entry file is named with its creation time (`YYYYMMDDHHMMSS`) and contains one line.
-- Version folders are zero-padded so they sort correctly: `1.4.0+12` becomes `001004000012`, `1.4.0` becomes `001004000`.
-
-In this tool repo:
-
-```
-lifewallet-mobile-change-log/
-├── changelog.sh                  # the `change` command
-├── changelog-helpers.sh
-├── changelog-init.sh
-├── changelog-new.sh
-├── changelog-preview.sh
-├── changelog-release.sh
-├── changelog-unrelease.sh
-├── changelog-upgrade.sh
-├── tools/
-│   └── install.sh
-├── LICENSE
-├── how-it-works.md
-└── README.md
-```
+- Version folders are zero-padded so they sort correctly: `1.90.0+93` becomes `001090000093`.
+- `changelog/unreleased/` is only used when there is no `pubspec.yaml`, or for entries added before that.
 
 ## Typical workflow
 
 1. Create a feature branch and make the code change.
 2. Run `change new <type> <message>` and commit the new file with your code.
 3. Open a pull request. Entries never conflict because each is its own file.
-4. Bump the build number in `pubspec.yaml` for each build as needed. The changelog is untouched.
-5. When submitting to the store: `change release <version+build>`, `change init`, commit, tag.
+4. Bump the build number in `pubspec.yaml` for the next build. New entries then go to the new build automatically.
+5. When submitting a build to the store: `change release <version+build>`, commit, tag.
 
 ## Command reference
 
 | Command | Description |
 | --- | --- |
-| `change init` | Initialize changelog in the current directory |
-| `change new <type> <message>` | Register a new change |
-| `change preview [version]` | Preview the changelog in Markdown (unreleased if no version) |
-| `change release <version>` | Release all unreleased changes as a version |
-| `change unrelease <version>` | Revert a released version back to unreleased |
+| `change init` | Create the `changelog/unreleased` folders (optional) |
+| `change new <type> <message>` | Add a change under the pubspec version+build |
+| `change preview [version]` | Preview a version+build (no build number = every build of it, one section each) (default: the one in pubspec.yaml) |
+| `change release <version>` | Mark a version+build as released with today's date |
+| `change unrelease <version>` | Remove the released mark |
 | `change upgrade` | Update the tool to the latest version |
 
 ## Duplicates

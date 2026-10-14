@@ -7,30 +7,18 @@ function _changelogsh_unrelease {
   fi
 
   version=$(_changelogsh_normalize_version $1)
-  expanded=$(_changelogsh_raw_to_expanded $version)
+  folders=$(_changelogsh_version_folders $version)
 
-  if [ ! -d "changelog/$expanded" ]; then
+  if [ -z "$folders" ]; then
     printf "$version not found.\n"
     return
   fi
 
-  if [ ! -d 'changelog/unreleased' ]; then
-    mkdir 'changelog/unreleased'
-  fi
-
-  # merge each type folder; never overwrite or drop entries already in unreleased
-  for dir in changelog/$expanded/*; do
-    if [ -d "$dir" ]; then
-      type=$(basename "$dir")
-      mkdir -p "changelog/unreleased/$type"
-      for file in "$dir"/*; do
-        if [ -e "$file" ]; then
-          mv "$file" "changelog/unreleased/$type/"
-        fi
-      done
-    fi
+  # Entries stay in their version folder; only the released mark is removed
+  # (one build for "1.90.0+93", every build for "1.90.0")
+  for folder in $folders; do
+    rm -f "changelog/$folder/.released"
   done
-  rm -r changelog/$expanded
 
-  _changelogsh_preview
+  _changelogsh_preview $version
 }

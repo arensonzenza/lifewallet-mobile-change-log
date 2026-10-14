@@ -1,50 +1,35 @@
 #!/bin/bash
 
-function _changelogsh_preview {
-  raw_version="Unreleased"
-  expanded="unreleased"
-
-  if [ "$#" -gt 0 ]; then
-    raw_version=$(_changelogsh_normalize_version $1)
+function _changelogsh_preview_hint {
+  if _changelogsh_has_unreleased; then
+    echo "Note: changelog/unreleased has entries that belong to no version."
+    echo "Run 'change release <version>' to assign them to a version."
   fi
+}
 
-  if [ $raw_version != "Unreleased" ]; then
-    expanded=$(_changelogsh_raw_to_expanded $raw_version)
-  fi
+# Prints one "## [version] date" block with its types. Args: folder-name, version label
+function _changelogsh_preview_section {
+  expanded="$1"
+  raw_version="$2"
+  current=$(_changelogsh_current_version)
 
-  if [ ! -d "changelog/$expanded" ]; then
-    printf "$raw_version not found.\n"
-    return
-  fi
-
-  # Unreleased: "## Unreleased", then "## [<version+build>] <date>" (version from pubspec.yaml, today's date).
-  # Released:   "## Release <version>", then "## [<app version+build>] <date>" (both saved by `change release`).
-  echo "# What's new?"
-  echo ""
-  if [ "$raw_version" == "Unreleased" ]; then
-    echo "## Unreleased"
-    echo ""
-    heading_version=$(_changelogsh_pubspec_version)
-    heading_date=$(date +"%Y-%m-%d")
-  else
-    echo "## Release ${raw_version%%+*}"
-    echo ""
-    # app version saved by `change release`; older releases fall back to the released version
-    heading_version=$(cat "changelog/$expanded/.version" 2>/dev/null)
-    [ -z "$heading_version" ] && heading_version=$raw_version
-    heading_date=$(cat "changelog/$expanded/.released" 2>/dev/null)
-  fi
-  if [ -n "$heading_version" ]; then
-    heading="## [$heading_version]"
-    if [ -n "$heading_date" ]; then
-      heading="$heading $heading_date"
+  # Heading date: the release date if released; today for the version being worked on
+  heading_date=$(cat "changelog/$expanded/.released" 2>/dev/null)
+  if [ -z "$heading_date" ]; then
+    if [ "$raw_version" == "Unreleased" ] || [ "$raw_version" == "$current" ]; then
+      heading_date=$(date +"%Y-%m-%d")
     fi
-    echo "$heading"
   fi
+  heading="## [$raw_version]"
+  if [ -n "$heading_date" ]; then
+    heading="$heading $heading_date"
+  fi
+
+  echo "$heading"
   for dir in changelog/$expanded/*; do
-    if [ "$(ls -A $dir)" ]; then
-      current=$(echo $dir | grep -o '[^/]*$')
-      echo "###" $(_changelogsh_title $current)
+    if [ -d "$dir" ] && [ "$(ls -A $dir)" ]; then
+      current_type=$(echo $dir | grep -o '[^/]*$')
+      echo "###" $(_changelogsh_title $current_type)
       # files are ordered oldest to newest; for duplicate lines only the latest is kept
       for file in $dir/*; do
         echo "-" $(cat $file)
@@ -52,4 +37,53 @@ function _changelogsh_preview {
       echo ""
     fi
   done
+}
+
+function _changelogsh_preview {
+  current=$(_changelogsh_current_version)
+
+  # Which version to show: the one given, else the pubspec.yaml version, else unreleased
+  if [ "$#" -gt 0 ]; then
+    if [ "$(echo $1 | tr '[:upper:]' '[:lower:]')" == "unreleased" ]; then
+      raw_version="Unreleased"
+    else
+      raw_version=$(_changelogsh_normalize_version $1)
+    fi
+  elif [ -n "$current" ]; then
+    raw_version=$current
+  else
+    raw_version="Unreleased"
+  fi
+
+  if [ "$raw_version" == "Unreleased" ]; then
+    folders="unreleased"
+    [ -d "changelog/unreleased" ] || folders=""
+  else
+    folders=$(_changelogsh_version_folders $raw_version)
+  fi
+
+  if [ -z "$folders" ]; then
+    if [ "$#" -eq 0 ] && [ -n "$current" ]; then
+      printf "No changes for $raw_version yet.\n"
+      _changelogsh_preview_hint
+    else
+      printf "$raw_version not found.\n"
+    fi
+    return
+  fi
+
+  echo "# What's new?"
+  echo ""
+  # One section per version+build, newest first
+  for folder in $folders; do
+    if [ "$folder" == "unreleased" ]; then
+      _changelogsh_preview_section unreleased Unreleased
+    else
+      _changelogsh_preview_section $folder $(_changelogsh_folder_to_version $folder)
+    fi
+  done
+
+  if [ "$#" -eq 0 ]; then
+    _changelogsh_preview_hint
+  fi
 }
