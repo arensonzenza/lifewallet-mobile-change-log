@@ -46,7 +46,7 @@ change init
 git add changelog && git commit -m "chore: init changelog"
 ```
 
-Creates `changelog/unreleased/` with `added`, `changed`, `deprecated`, `fixed`, `removed` and `security` folders.
+Creates only the empty `changelog/unreleased/` folder. No type folders are created. `change new` creates the version+build and type folders when you add an entry. This step is optional.
 
 ### 2. Add a change (every task)
 

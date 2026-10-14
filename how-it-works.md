@@ -27,7 +27,7 @@ These are the available commands:
 change init
 ```
 
-Creates `changelog/unreleased/` with `added`, `changed`, `deprecated`, `fixed`, `removed` and `security` folders. Commit it.
+Creates only the empty `changelog/unreleased/` folder. No type folders are created: `change new` creates the version+build and type folders when you add an entry. This step is optional.
 
 ## 3. Add changes
 
