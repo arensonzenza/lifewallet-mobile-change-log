@@ -129,6 +129,14 @@ git tag v1.4.0+12
 - Only digits, dots and an optional `+build` are valid. Text such as `version_7.0` or `v7.0` is not.
 - Use `change preview <version>` to get the notes for the store listing or release notes.
 
+### Leave a change out of a release
+
+```bash
+change release 7.0 --skip LW-198
+```
+
+Entries that contain the given text (case-insensitive, for example a ticket number) are not released. They stay in `changelog/unreleased/` for the next release, and the command lists them at the end. Use `--skip` more than once to leave out several. If a `--skip` text matches nothing, nothing is released, so a typo can't release the change by accident.
+
 ### 5. Summary of a release
 
 ```bash
@@ -206,7 +214,7 @@ lifewallet-mobile-change-log/
 | `change new <type> <message>` | Register a new change |
 | `change preview [version]` | Preview the changelog in Markdown (unreleased if no version) |
 | `change release summary <version>` | Wrap a release into one deduplicated list and save it as `.summary` |
-| `change release <version>` | Release all unreleased changes as a version |
+| `change release <version> [--skip <text>]` | Release all unreleased changes as a version; `--skip` keeps matching changes in unreleased |
 | `change unrelease <version>` | Revert a released version back to unreleased |
 | `change upgrade` | Update the tool to the latest version |
 

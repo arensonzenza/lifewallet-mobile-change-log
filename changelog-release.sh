@@ -47,7 +47,7 @@ $(for f in $files; do echo "-" $(cat $f); done | awk '{ line[NR] = $0; last[$0] 
   echo "$out"
 }
 
-function _changelogsh_release {
+function _changelogsh_release_run {
   if [ "$#" -ge 1 ] && [ "$(echo $1 | tr '[:upper:]' '[:lower:]')" == "summary" ]; then
     _changelogsh_release_summary ${@:2}
     return
@@ -105,4 +105,72 @@ function _changelogsh_release {
   rm -f "changelog/$base/.name" "changelog/$base/.released" "changelog/$base/.version"
 
   _changelogsh_preview $version
+}
+
+# change release <version> [--skip <text>]...
+# Entries that contain <text> (case-insensitive, e.g. a ticket like LW-198) are left out of the
+# release and stay in changelog/unreleased/ for the next one.
+function _changelogsh_release {
+  local args=() skips=() hold file rel text matched kept=""
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" == "--skip" ]; then
+      if [ -z "$2" ]; then
+        echo "--skip needs the text of the change to leave out, e.g. --skip LW-198"
+        return
+      fi
+      skips+=("$2")
+      shift 2
+    else
+      args+=("$1")
+      shift
+    fi
+  done
+
+  if [ ${#skips[@]} -eq 0 ]; then
+    _changelogsh_release_run "${args[@]}"
+    return
+  fi
+
+  if [ ! -d "changelog/unreleased" ]; then
+    printf "Nothing to release.\n"
+    return
+  fi
+
+  # Every --skip must match something, otherwise a typo would release the change by accident.
+  for text in "${skips[@]}"; do
+    matched=""
+    while IFS= read -r file; do
+      if grep -qiF -- "$text" "$file"; then matched="yes"; break; fi
+    done < <(find changelog/unreleased -type f ! -name '.*')
+    if [ -z "$matched" ]; then
+      printf "No unreleased change matches '%s'. Nothing was released.\n" "$text"
+      return
+    fi
+  done
+
+  # Set the skipped entries aside, release the rest, then put them back in unreleased.
+  hold=$(mktemp -d)
+  while IFS= read -r file; do
+    for text in "${skips[@]}"; do
+      if grep -qiF -- "$text" "$file"; then
+        rel=${file#changelog/unreleased/}
+        mkdir -p "$hold/$(dirname "$rel")"
+        kept="$kept- $(cat "$file")\n"
+        mv "$file" "$hold/$rel"
+        break
+      fi
+    done
+  done < <(find changelog/unreleased -type f ! -name '.*')
+
+  _changelogsh_release_run "${args[@]}"
+
+  mkdir -p changelog/unreleased
+  (cd "$hold" && find . -type f) | while IFS= read -r file; do
+    rel=${file#./}
+    mkdir -p "changelog/unreleased/$(dirname "$rel")"
+    mv "$hold/$rel" "changelog/unreleased/$rel"
+  done
+  rm -rf "$hold" 2>/dev/null
+
+  printf "\nLeft in unreleased:\n$kept"
 }

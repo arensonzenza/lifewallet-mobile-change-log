@@ -20,7 +20,7 @@ These are the available commands:
   init        Initialize changelog in current directory
   new         Register new change in the changelog
   preview     Preview the changelog in Markdown format
-  release     Release the changes for the current version (release summary <version> wraps a release)
+  release     Release the changes for the current version (--skip <text> leaves a change out; release summary <version> wraps a release)
   unrelease   Reverts the changes from the version specified back to unreleased
   upgrade     Pulls the latest master branch from GitHub\n"
 
