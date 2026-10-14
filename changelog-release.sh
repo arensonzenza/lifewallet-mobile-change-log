@@ -44,6 +44,9 @@ function _changelogsh_release {
   fi
 
   date +"%Y-%m-%d" > "changelog/$base/.released"
+  # Remember the release name as typed (7.0 stays 7.0, not 7.0.0)
+  name="${1%%+*}"
+  echo "$name" > "changelog/$base/.name"
   # Version history: the app version (pubspec.yaml) at the time of release
   app_version=$(_changelogsh_pubspec_version)
   if [ -n "$app_version" ]; then

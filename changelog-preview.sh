@@ -46,7 +46,9 @@ function _changelogsh_preview {
   if [ -d "changelog/$base" ] && { [ -z "$only" ] || [ -d "changelog/$base/$only" ] || _changelogsh_has_flat_entries "changelog/$base"; }; then
     echo "# What's new?"
     echo ""
-    echo "## Release ${raw_version%%+*}"
+    release_name=$(cat "changelog/$base/.name" 2>/dev/null)
+    [ -z "$release_name" ] && release_name=${raw_version%%+*}
+    echo "## Release $release_name"
     echo ""
     _changelogsh_preview_builds "changelog/$base" $only
     if [ -z "$only" ] && _changelogsh_has_flat_entries "changelog/$base"; then
