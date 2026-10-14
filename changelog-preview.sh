@@ -11,6 +11,11 @@ function _changelogsh_preview_builds {
 }
 
 function _changelogsh_preview {
+  # "change preview release 7.0" is the same as "change preview 7.0"
+  if [ "$#" -ge 2 ] && [ "$(echo $1 | tr '[:upper:]' '[:lower:]')" == "release" ]; then
+    shift
+  fi
+
   raw_version="Unreleased"
   if [ "$#" -gt 0 ] && [ "$(echo $1 | tr '[:upper:]' '[:lower:]')" != "unreleased" ]; then
     raw_version=$(_changelogsh_normalize_version $1)
